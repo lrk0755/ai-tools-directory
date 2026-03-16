@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "include": [
+    "/_next/static/*",
+    "/api/*"
+  ],
+  "exclude": [
+    "/*"
+  ]
+}
