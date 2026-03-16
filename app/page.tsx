@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
+import { TOOLS_DATA } from '@/lib/data'
 
 // Types
 interface Tool {
@@ -11,7 +12,7 @@ interface Tool {
   html_url: string
   stargazers_count: number
   forks_count: number
-  language: string
+  language: string | null
   topics: string[]
   updated_at: string
   owner: {
@@ -35,15 +36,13 @@ const categoryKeywords: Record<string, string[]> = {
   '教程': ['tutorial', 'course', 'learn', 'guide', 'docs', 'documentation', 'how-to'],
 }
 
-function categorizeTool(topics: string[], language: string): Category {
+function categorizeTool(topics: string[], language: string | null): Category {
   const allTopics = [...topics, language?.toLowerCase() || ''].join(' ').toLowerCase()
   
-  // First check for OpenClaw-related
   if (allTopics.includes('openclaw') || allTopics.includes('pi-mono')) {
     return 'OpenClaw技能'
   }
   
-  // Then check other categories
   for (const [cat, keywords] of Object.entries(categoryKeywords)) {
     if (cat === 'OpenClaw技能' || cat === '教程') continue
     if (keywords.some(k => allTopics.includes(k.toLowerCase()))) {
@@ -51,7 +50,6 @@ function categorizeTool(topics: string[], language: string): Category {
     }
   }
   
-  // Check for tutorials
   if (topics.some(t => ['tutorial', 'course', 'learn', 'guide', 'docs'].includes(t.toLowerCase()))) {
     return '教程'
   }
@@ -80,26 +78,6 @@ function formatDate(dateStr: string): string {
   return `${Math.floor(days / 365)}年前`
 }
 
-// Skeleton loader
-function ToolCardSkeleton() {
-  return (
-    <div className="bg-card border border-border rounded-xl p-6 animate-pulse">
-      <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-lg bg-border" />
-        <div className="flex-1">
-          <div className="h-5 bg-border rounded w-3/4 mb-2" />
-          <div className="h-4 bg-border rounded w-full mb-4" />
-        </div>
-      </div>
-      <div className="flex gap-2 mt-4">
-        <div className="h-6 w-16 bg-border rounded-full" />
-        <div className="h-6 w-20 bg-border rounded-full" />
-      </div>
-    </div>
-  )
-}
-
-// Tool Card Component
 function ToolCard({ tool, index }: { tool: Tool; index: number }) {
   const category = categorizeTool(tool.topics, tool.language)
   
@@ -162,35 +140,14 @@ function ToolCard({ tool, index }: { tool: Tool; index: number }) {
   )
 }
 
-// Main Component
 export default function Home() {
-  const [tools, setTools] = useState<Tool[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<Category>('全部')
   const [sortBy, setSortBy] = useState<SortOption>('stars')
 
-  useEffect(() => {
-    async function fetchTools() {
-      try {
-        const res = await fetch('/api/tools')
-        if (!res.ok) throw new Error('Failed to fetch')
-        const data = await res.json()
-        setTools(data)
-      } catch (err) {
-        setError('加载失败，请刷新页面重试')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchTools()
-  }, [])
-
   const filteredTools = useMemo(() => {
-    let result = [...tools]
+    let result = [...TOOLS_DATA]
     
-    // Filter by search
     if (search) {
       const searchLower = search.toLowerCase()
       result = result.filter(t => 
@@ -200,12 +157,10 @@ export default function Home() {
       )
     }
     
-    // Filter by category
     if (category !== '全部') {
       result = result.filter(t => categorizeTool(t.topics, t.language) === category)
     }
     
-    // Sort
     result.sort((a, b) => {
       switch (sortBy) {
         case 'stars':
@@ -220,11 +175,10 @@ export default function Home() {
     })
     
     return result
-  }, [tools, search, category, sortBy])
+  }, [search, category, sortBy])
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -245,19 +199,16 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* Hero */}
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             发现热门 <span className="gradient-text">AI 工具</span>
           </h2>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            实时从 GitHub 获取最流行的 AI 和机器学习项目
+            精选 GitHub 最流行的 AI 和机器学习项目
           </p>
         </div>
 
-        {/* Search & Filters */}
         <div className="mb-8 space-y-4">
-          {/* Search */}
           <div className="relative max-w-xl mx-auto">
             <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -271,9 +222,7 @@ export default function Home() {
             />
           </div>
 
-          {/* Filters */}
           <div className="flex flex-wrap items-center justify-center gap-3">
-            {/* Categories */}
             <div className="flex flex-wrap justify-center gap-2">
               {categories.map(cat => (
                 <button
@@ -292,7 +241,6 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Sort */}
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
@@ -305,48 +253,17 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="text-center text-slate-400 mb-8">
-          {loading ? (
-            <span>加载中...</span>
-          ) : (
-            <span>共 {filteredTools.length} 个工具</span>
-          )}
+          共 {filteredTools.length} 个工具
         </div>
 
-        {/* Error State */}
-        {error && (
-          <div className="text-center py-12">
-            <p className="text-red-400 mb-4">{error}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-primary rounded-lg hover:bg-primary/80 transition-colors"
-            >
-              刷新页面
-            </button>
-          </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredTools.map((tool, index) => (
+            <ToolCard key={tool.id} tool={tool} index={index} />
+          ))}
+        </div>
 
-        {/* Tools Grid */}
-        {!loading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredTools.map((tool, index) => (
-              <ToolCard key={tool.id} tool={tool} index={index} />
-            ))}
-          </div>
-        )}
-
-        {/* Loading Skeletons */}
-        {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <ToolCardSkeleton key={i} />
-            ))}
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!loading && !error && filteredTools.length === 0 && (
+        {filteredTools.length === 0 && (
           <div className="text-center py-12">
             <p className="text-slate-400 text-lg">没有找到相关工具</p>
             <button 
@@ -359,7 +276,6 @@ export default function Home() {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-border py-8 mt-12">
         <div className="max-w-7xl mx-auto px-6 text-center text-slate-500 text-sm">
           <p>数据来自 GitHub · 构建于 {new Date().getFullYear()}</p>

@@ -1,13 +1,5 @@
-import { NextResponse } from 'next/server'
-
-// In-memory cache
-let cachedTools: any[] | null = null
-let lastFetchTime = 0
-const CACHE_DURATION = 1000 * 60 * 30 // 30 minutes
-
-// Curated AI tools based on HelloGitHub recommendations + GitHub popularity
-const FALLBACK_TOOLS = [
-  // === LLMs & Chat ===
+// Static AI tools data
+export const TOOLS_DATA = [
   {
     id: 1,
     name: 'AutoGPT',
@@ -60,8 +52,6 @@ const FALLBACK_TOOLS = [
     updated_at: '2026-03-16T00:00:00Z',
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1467813?v=4', login: 'langgenius' }
   },
-  
-  // === Image Generation ===
   {
     id: 5,
     name: 'Stable Diffusion WebUI',
@@ -88,8 +78,6 @@ const FALLBACK_TOOLS = [
     updated_at: '2026-03-16T00:00:00Z',
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/112354216?v=4', login: 'Comfy-Org' }
   },
-  
-  // === Automation & Agents ===
   {
     id: 7,
     name: 'n8n',
@@ -116,8 +104,6 @@ const FALLBACK_TOOLS = [
     updated_at: '2026-03-16T00:00:00Z',
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/145458891?v=4', login: 'open-webui' }
   },
-  
-  // === Developer Tools ===
   {
     id: 9,
     name: 'Transformers',
@@ -144,8 +130,6 @@ const FALLBACK_TOOLS = [
     updated_at: '2026-03-16T00:00:00Z',
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1498108?v=4', login: 'openai' }
   },
-  
-  // === RAG & Knowledge Base ===
   {
     id: 11,
     name: 'RAGFlow',
@@ -172,8 +156,6 @@ const FALLBACK_TOOLS = [
     updated_at: '2026-03-15T00:00:00Z',
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4', login: 'Anything-LLM' }
   },
-  
-  // === Learning Tutorials ===
   {
     id: 13,
     name: 'LLMs from Scratch',
@@ -226,8 +208,6 @@ const FALLBACK_TOOLS = [
     updated_at: '2026-03-12T00:00:00Z',
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4', login: 'shareAI-lab' }
   },
-  
-  // === Tools & Utilities ===
   {
     id: 17,
     name: 'Firecrawl',
@@ -267,8 +247,6 @@ const FALLBACK_TOOLS = [
     updated_at: '2026-03-08T00:00:00Z',
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1961952?v=4', login: 'alibaba' }
   },
-  
-  // === OpenClaw Ecosystem (New Category!) ===
   {
     id: 20,
     name: 'OpenClaw',
@@ -310,19 +288,6 @@ const FALLBACK_TOOLS = [
   },
   {
     id: 23,
-    name: 'anthropic/skills',
-    full_name: 'anthropics/skills',
-    description: 'Claude Official - Learn how to create skills for AI assistants.',
-    html_url: 'https://github.com/anthropics/skills',
-    stargazers_count: 5000,
-    forks_count: 400,
-    language: null,
-    topics: ['claude', 'skill', 'ai', 'agent', 'tutorial', 'guide', 'openclaw'],
-    updated_at: '2026-03-12T00:00:00Z',
-    owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4', login: 'anthropics' }
-  },
-  {
-    id: 24,
     name: 'Awesome OpenClaw Skills',
     full_name: 'openclaw/skills',
     description: 'OpenClaw bundled skills and examples.',
@@ -334,11 +299,9 @@ const FALLBACK_TOOLS = [
     updated_at: '2026-03-10T00:00:00Z',
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4', login: 'openclaw' }
   },
-  
-  // === More Tutorials ===
   {
-    id: 25,
-    name: 'AI Agent Tutorial',
+    id: 24,
+    name: 'awesome-ai-agents',
     full_name: 'e2b-dev/awesome-ai-agents',
     description: 'A curated list of AI agents and tutorials.',
     html_url: 'https://github.com/e2b-dev/awesome-ai-agents',
@@ -350,7 +313,7 @@ const FALLBACK_TOOLS = [
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4', login: 'e2b-dev' }
   },
   {
-    id: 26,
+    id: 25,
     name: 'Deep Learning Course',
     full_name: 'deeplearning-ai/deep-learning-specialization',
     description: 'Neural Networks and Deep Learning by Andrew Ng.',
@@ -363,7 +326,7 @@ const FALLBACK_TOOLS = [
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4', login: 'deeplearning-ai' }
   },
   {
-    id: 27,
+    id: 26,
     name: 'FastAI Course',
     full_name: 'fastai/fastbook',
     description: 'Making neural nets uncool again - Interactive Deep Learning Course.',
@@ -375,10 +338,8 @@ const FALLBACK_TOOLS = [
     updated_at: '2026-02-20T00:00:00Z',
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4', login: 'fastai' }
   },
-  
-  // === ChatGPT Prompts ===
   {
-    id: 28,
+    id: 27,
     name: 'Awesome ChatGPT Prompts',
     full_name: 'f/awesome-chatgpt-prompts',
     description: 'Share, discover, and collect prompts from the community.',
@@ -390,10 +351,8 @@ const FALLBACK_TOOLS = [
     updated_at: '2026-03-16T00:00:00Z',
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4', login: 'f' }
   },
-  
-  // === Deep Learning & CV ===
   {
-    id: 29,
+    id: 28,
     name: 'Deep-Live-Cam',
     full_name: 'hacksider/Deep-Live-Cam',
     description: 'Real time face swap and one-click video deepfake.',
@@ -406,7 +365,7 @@ const FALLBACK_TOOLS = [
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4', login: 'hacksider' }
   },
   {
-    id: 30,
+    id: 29,
     name: 'FreeMoCap',
     full_name: 'freemocap/freemocap',
     description: 'Free and open source motion capture system.',
@@ -419,77 +378,3 @@ const FALLBACK_TOOLS = [
     owner: { avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4', login: 'freemocap' }
   }
 ]
-
-export async function GET() {
-  const now = Date.now()
-  
-  // Return cached data if still valid
-  if (cachedTools && (now - lastFetchTime) < CACHE_DURATION) {
-    return NextResponse.json(cachedTools)
-  }
-
-  try {
-    // Try to fetch fresh data from GitHub
-    const repos = FALLBACK_TOOLS.map(t => t.full_name)
-    const tools: any[] = []
-    
-    // Fetch in batches
-    for (let i = 0; i < repos.length; i += 10) {
-      const batch = repos.slice(i, i + 10)
-      const response = await fetch(`https://api.github.com/repos/${batch.join(',')}`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'AI-Tools-Directory',
-        },
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        const results = Array.isArray(data) ? data : [data]
-        
-        for (const repo of results) {
-          if (repo && repo.id) {
-            tools.push({
-              id: repo.id,
-              name: repo.name,
-              full_name: repo.full_name,
-              description: repo.description,
-              html_url: repo.html_url,
-              stargazers_count: repo.stargazers_count || 0,
-              forks_count: repo.forks_count || 0,
-              language: repo.language,
-              topics: repo.topics || [],
-              updated_at: repo.updated_at,
-              owner: {
-                avatar_url: repo.owner.avatar_url,
-                login: repo.owner.login,
-              },
-            })
-          }
-        }
-      }
-    }
-    
-    if (tools.length > 0) {
-      tools.sort((a, b) => b.stargazers_count - a.stargazers_count)
-      cachedTools = tools
-      lastFetchTime = now
-      return NextResponse.json(tools)
-    }
-    
-    cachedTools = FALLBACK_TOOLS
-    lastFetchTime = now
-    return NextResponse.json(FALLBACK_TOOLS)
-    
-  } catch (error) {
-    console.error('Error fetching tools:', error)
-    
-    if (cachedTools) {
-      return NextResponse.json(cachedTools)
-    }
-    
-    cachedTools = FALLBACK_TOOLS
-    lastFetchTime = now
-    return NextResponse.json(FALLBACK_TOOLS)
-  }
-}
